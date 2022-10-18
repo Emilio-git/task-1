@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <meta http-equiv="X-UA-Compatible" content="IE=edge">
+   <meta name="viewport" content="width=device-width, initial-scale=1.0">
+   <link rel="stylesheet" href="./src/style/style.css">
+   <title>JS-2</title>
+</head>
+<body>
+   <div class="wrapper">
+      <main class="tickets">
+         <div class="tickets__container container">
+            <div class="tickets__content">
+               <h1 class="tickets__title">Покупка билетов</h1>
+               <div class="tickets__destination destination">
+                  <label class="destination__label" for="route">Выберите направление</label>
+                  <select class="destination__select" name="route" id="route">
+                     <option class="destination__option" value="fromA">из A в B</option>
+                     <option class="destination__option" value="fromB">из B в A</option>
+                     <option class="destination__option" value="fromAtoA">из A в B и обратно в А</option>
+                  </select>
+               </div>
+               
+               <div class="tickets__time time">
+                  <label class="time__label" for="time">Выберите время отправления</label>
+                  <!-- Подставляется значение из JS -->
+               </div>
+               
+               <div class="tickets__quantity quantity">
+                  <label class="quantity__label" for="num">Количество билетов</label>
+                  <input class="quantity__input" id="num" type="number" min="1" max="15">
+                  <button class="quantity__btn">Посчитать</button>
+               </div>
+            </div>
+            <div class="tickets__img">
+               <img src="./src/img/ship.png" alt="Кораблик">
+            </div>
+         </div>
+         
+      </main>
+   </div>
+  <script src="./src/js/script.js"></script>
+</body>
+</html>
