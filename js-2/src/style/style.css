@@ -94,7 +94,7 @@ select, input, button {
   border-radius: 20px;
   padding: 10px 15px;
   font-size: 16px;
-  width: 200px;
+  width: 250px;
   display: block;
   font-family: Arial, "Helvetica Neue", Helvetica, sans-serif;
 }
@@ -114,19 +114,12 @@ label {
 }
 
 .tickets__container {
+  height: 500px;
   border-radius: 20px;
   background: rgb(53, 166, 211);
   padding: 30px;
   color: #fff;
   box-shadow: 0px 0px 10px 3px rgba(0, 0, 0, 0.2);
-  display: flex;
-  justify-content: space-between;
-}
-.tickets__content {
-  flex: 1 0 50%;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
 }
 .tickets__title {
   font-size: 30px;
@@ -141,16 +134,18 @@ label {
 .tickets__quantity {
   margin-bottom: 10px;
 }
-.tickets__img {
-  flex: 0 1 auto;
-}
-.tickets__img img {
-  width: 100%;
+
+.time-back {
+  margin-bottom: 10px;
 }
 
 .destination__label {
   margin-right: 15px;
 }
+.time__select {
+  margin-bottom: 10px;
+}
+
 .quantity__input {
   margin-bottom: 15px;
 }
