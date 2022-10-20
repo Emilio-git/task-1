@@ -1,40 +1,54 @@
 'use strict';
 
 window.addEventListener('DOMContentLoaded', () => {
+   // Необходимые константы.
    const destination = document.querySelector('.destination__select'),
          availableTime = document.querySelector('.time'),
          optionsFromA = document.createElement('select'),
-         optionsFromB = document.createElement('select');
+         optionsFromB = document.createElement('select'),
+         wrapper = document.querySelector('.tickets__container'),
+         btnResult = document.querySelector('.quantity__btn'),
+         quantityInput = document.querySelector('.quantity__input');
+         
+   // Определение UTC зоны клиента (пользователя).
+   const clientTimeOffset = new Date().getTimezoneOffset();
 
+   // Данные, которые приходят условно с сервера. Числами, отражено время по GMT 0,
+   // в удобном для чтения программы формате.
+   const scheduleData = {
+      fromA: [
+         900, 930, 945, 960, 975, 1080,
+      ],
+      fromB: [
+         930, 945, 960, 975, 995, 1130, 1135,
+      ],
+   }
+
+   // Конвертация данных для дальнейшей передачи в каждый option.
+   function getScheduleTime(data, selectorOfOption) {
+      return data.map(time => {
+         return `<option class=${selectorOfOption} value="${time - clientTimeOffset}">${timeCounter(time - clientTimeOffset)}</option>`;
+      })
+   }
+
+   // Добавление стилевых классов и листенера для переданного select'а.
    function addFeaturesToSelect(selectElement) {
       selectElement.classList.add('time__select')
       selectElement.addEventListener('change', () => {
          clearResult();
-            timeListener(backToA);
+         timeListener(backToA);
       });
    }
 
+   // Добавление необходимых функций для select'ов разных путей.
    addFeaturesToSelect(optionsFromA);
    addFeaturesToSelect(optionsFromB);
 
-   optionsFromA.innerHTML = `
-      <option class="time__option" value="1080">${timeCounter(1080)}</option>
-      <option class="time__option" value="1110">${timeCounter(1110)}</option>
-      <option class="time__option" value="1125">${timeCounter(1125)}</option>
-      <option class="time__option" value="1140">${timeCounter(1140)}</option>
-      <option class="time__option" value="1155">${timeCounter(1155)}</option>
-      <option class="time__option" value="1260">${timeCounter(1260)}</option>
-   `;
-   optionsFromB.innerHTML = `
-      <option class="time__option" value="1110">${timeCounter(1110)}</option>
-      <option class="time__option" value="1125">${timeCounter(1125)}</option>
-      <option class="time__option" value="1140">${timeCounter(1140)}</option>
-      <option class="time__option" value="1155">${timeCounter(1155)}</option>
-      <option class="time__option" value="1175">${timeCounter(1175)}</option>
-      <option class="time__option" value="1310">${timeCounter(1310)}</option>
-      <option class="time__option" value="1315">${timeCounter(1315)}</option>
-   `;
+   // Развертывание в нужный формат данных, полученных из условной БД.
+   optionsFromA.innerHTML = `${[...getScheduleTime(scheduleData.fromA, 'time__option')]}`;
+   optionsFromB.innerHTML = `${[...getScheduleTime(scheduleData.fromB, 'time__option')]}`;
 
+   // Проверка выбранного пути направления пользователя.
    function checkDestination() {
       if(destination.value === 'fromA') {
          availableTime.append(optionsFromA);
@@ -50,57 +64,68 @@ window.addEventListener('DOMContentLoaded', () => {
       }
    }
 
+   // Инициализация select'а направления, для первоначального предложения времени пользователю.
    checkDestination();
 
+   // Листенер при выборе пользователем другого направления.
    destination.addEventListener('change', () => {
       clearResult();
       availableTime.lastElementChild.remove();
       checkDestination();
    })
 
+   // Функция удаления дополнительно выпадающего select'а для выбора обратного времени.
    function removeAdditionalSelector() {
       if(availableTime.nextElementSibling.classList.contains('time-back')) {
          availableTime.nextElementSibling.remove();
       }
    }
 
+   // Создание дополнительного select'а (вынесено нарочно в глобальную область).
    const backToA = document.createElement('div');
    backToA.classList.add('time-back')
    backToA.innerHTML = `
    <label class="time__label-back" for="timeBack">Выберите время возвращения в А</label>
    <select class="time__select-back" name="timeBack" id="timeBack">
-      <option class="time__option-back" value="1110">${timeCounter(1110)}</option>
-      <option class="time__option-back" value="1125">${timeCounter(1125)}</option>
-      <option class="time__option-back" value="1140">${timeCounter(1140)}</option>
-      <option class="time__option-back" value="1155">${timeCounter(1155)}</option>
-      <option class="time__option-back" value="1175">${timeCounter(1175)}</option>
-      <option class="time__option-back" value="1310">${timeCounter(1310)}</option>
-      <option class="time__option-back" value="1315">${timeCounter(1315)}</option>
+      ${[...getScheduleTime(scheduleData.fromB, 'time__option-back')]}
    </select>
    `;
 
+   // Листенер для удаления времени обратного направления 
+   // (для исключения ошибок при покупке билетов пользователя).
    function addAdditionalSelector() {
       timeListener(backToA);
       return backToA
    }
 
-   const wrapper = document.querySelector('.tickets__container');
-   const btnResult = document.querySelector('.quantity__btn');
-   const quantityInput = document.querySelector('.quantity__input');
-
+   //  Очистка предыдущего результата при вводе нового количества билетов пользователя.
    quantityInput.addEventListener('input', () => {
       clearResult();
    });
 
+   // Инициализация результата при нажатии кнопки.
    btnResult.addEventListener('click', () => {
       const currentQuantity = quantityInput.value;
       getResult(currentQuantity, destination.value, availableTime.lastElementChild.value);
    });
 
+   // Функция перевода времени полученной из условной БД в формат часы:минуты.
    function timeCounter(timeInMinutes) {
-      return timeInMinutes = `${Math.floor(timeInMinutes / 60)}:${timeInMinutes % 60 > 10? timeInMinutes % 60 : '0' + timeInMinutes % 60}`;
+      let hours, minutes;
+      if (Math.floor(timeInMinutes / 60) >= 24) {
+         hours = `0${Math.floor(timeInMinutes / 60) - 24}`
+      } else {
+         hours = Math.floor(timeInMinutes / 60)
+      }
+      if (timeInMinutes % 60 > 10) {
+         minutes = timeInMinutes % 60
+      } else {
+         minutes = '0' + timeInMinutes % 60;
+      }
+      return `${hours}:${minutes}`;
    } 
 
+   // Фунцкия определения фразы для определенного количества билетов введенных пользователем.
    function getQuantityPhrase(quantity) {
       if(quantity.slice(-1) == 1 && quantity != 11) {
          return `билет`;
@@ -111,10 +136,14 @@ window.addEventListener('DOMContentLoaded', () => {
       }
    }
 
+   // Вспомогательная функция возврата выбранного времени.
    function getChoosedTime() {
       return optionsFromA.value;
    }
    
+   // Листенер для дополнительного селекта, который убирает время обратного пути,
+   // чтобы пользователь не ошибся при покупке билетов.
+   // Больше или равно в данном случае исключает, что клиент ни пробудет ни минуты в пункте B. 
    function timeListener(time) {
       const allTimes = time.querySelectorAll('.time__option-back');
       const timeToStamp = time.querySelector('#timeBack');
@@ -129,10 +158,11 @@ window.addEventListener('DOMContentLoaded', () => {
       });
    }
 
+   // Функция получения результата и его вывода.
    function getResult(quantity, destination, time) {
       let timeAmount, destinationPhrase, sum;
 
-      if (quantity < 1 || quantity > 100) {
+      if (quantity < 1 || quantity > 100 || (+quantity % 1 > 0)) {
          throwError();
          return;
       }
@@ -152,10 +182,11 @@ window.addEventListener('DOMContentLoaded', () => {
          sum = 1200;
       }
       
-      let arrivalTime = +time + timeAmount;
-      const timeBackOnB = backToA.querySelector('#timeBack').value;
-      let timeOnB = timeBackOnB - time - 50;
-      const result = document.createElement('div');
+      const timeBackOnB = backToA.querySelector('#timeBack').value,
+            result = document.createElement('div');
+      let arrivalTime = +time + timeAmount,
+          timeOnB = timeBackOnB - time - 50;
+
       result.classList.add('tickets__result');
       result.innerHTML = `
          <p class="tickets__text">
@@ -174,12 +205,15 @@ window.addEventListener('DOMContentLoaded', () => {
       wrapper.append(result);
    }
    
+   // Функция очистки предыдущего результата.
    function clearResult() {
       if (wrapper.lastElementChild.classList.contains('tickets__result')) {
          wrapper.lastElementChild.remove();
       }
    }
 
+   // Функция вывода ошибки при некорректном введении пользователем количества билетов,
+   // превышающих заданный лимит, который также отражен в html атрибутами min и max.
    function throwError() {
       const result = document.createElement('div');
       result.classList.add('tickets__result');
@@ -191,5 +225,9 @@ window.addEventListener('DOMContentLoaded', () => {
       `;
       wrapper.append(result);
    }
-
 });
+
+// P.S. В целом программа не имеет ограничений по вводу пользователем количества билетов, оно задано условно.
+// Допускаю, что данный код требует оптимизации, а также валидации введенных данных,
+// однако на это необходимо дополнительно время.
+// Можно было добавить импровизированную БД в json формате.
